@@ -63,11 +63,30 @@ anchor deploy --provider.cluster devnet
 
 Keys never live in this repository: the deploy wallet sits in `~/.config/solana/id.json` and `.gitignore` excludes keypairs and `.env` files.
 
+## Browser seeder (`app/seeder`)
+
+One static page. A small open model runs in the tab (zero-shot routing: deciding which tool an incoming request goes to, the bulk of routine agent work). Each completed step is hashed and submitted as a liveness receipt; every four steps the verifier re-runs one at random and, if it agrees, signs `verify_batch` and SYN is minted.
+
+It has two chain modes:
+
+- **Local validator**: real transactions against this program. Run a validator with the program preloaded, then open the page and choose *Local validator*:
+
+  ```bash
+  anchor build
+  solana-test-validator -r --bpf-program J8H5nv3Wx6JHMmHjCFvxm84LdWmhY6HBY18frzD43KJD target/deploy/synterra.so
+  python -m http.server 5180 --directory app/seeder   # then open http://localhost:5180
+  ```
+
+- **Simulated chain**: the program's rules applied in the tab, every transaction labelled `sim-…`. This is the public demo while the devnet deployment is pending (the devnet faucet is rate-limited).
+
+For the demo both the seeder key and the verifier key are throwaway keys in the browser; in production the verifier is a separate service with its own key. If the model host is unreachable the page falls back to a keyword router and says so.
+
 ## Roadmap for the hackathon
 
 - [x] Anchor program: seeders, liveness receipts, verified SYN minting, Align wall
-- [ ] Browser seeder: a small open model running in the tab, submitting receipts
-- [ ] Verifier service: re-runs a random sample and signs batches
+- [x] Browser seeder: a small open model running in the tab, submitting receipts (local validator + simulated chain)
+- [ ] Devnet deployment
+- [ ] Verifier as a separate service that signs batches with its own key
 - [ ] Pledge site integration: "Start seeding" and an on-chain Align button
 
 ## License

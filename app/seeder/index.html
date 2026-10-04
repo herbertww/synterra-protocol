@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Synterra Seeder</title>
+<meta name="description" content="Keep an AI swarm alive from a browser tab: a small open model completes agent steps, each step is a liveness receipt, and verified work earns devnet SYN." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230A0A0B'/%3E%3Crect x='20' y='27' width='24' height='10' rx='5' transform='rotate(45 32 32)' fill='%237E9CFF'/%3E%3C/svg%3E" />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+<script src="vendor/solana-web3-1.98.0.iife.min.js"></script>
+<style>
+/* Layout: a working console. Left column runs the seeder (model, steps, verification); right column holds the wallet, the ledger and the Align wall. */
+:root {
+  --bg: #F1EFEA; --panel: #FFFFFF; --fg: #0A0A0B; --muted: #5A5850; --line: #D9D5CC;
+  --accent: #2347C6; --accent-fg: #FFFFFF; --ok: #1F7A4D; --warn: #9A5B00; --bad: #A12A2A;
+  --f-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0A0A0B; --panel: #131418; --fg: #F1EFEA; --muted: #A3A097; --line: #2A2B31; --accent: #7E9CFF; --accent-fg: #0A0A0B; --ok: #5FD39A; --warn: #E6B35C; --bad: #F08A8A; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #0A0A0B; --panel: #131418; --fg: #F1EFEA; --muted: #A3A097; --line: #2A2B31; --accent: #7E9CFF; --accent-fg: #0A0A0B; --ok: #5FD39A; --warn: #E6B35C; --bad: #F08A8A; color-scheme: dark }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 400 15px/1.55 var(--f-sans); padding: 0 16px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px; display: flex; flex-direction: column; gap: 22px; }
+header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; }
+.brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 20px; letter-spacing: -.01em; }
+.brand svg { width: 30px; height: 30px; }
+.mode { display: flex; gap: 6px; flex-wrap: wrap; }
+.mode button { font: 500 13px var(--f-mono); padding: 8px 12px; border-radius: 8px; border: 1.5px solid var(--fg); background: transparent; color: var(--fg); cursor: pointer; }
+.mode button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.banner { border: 1.5px dashed var(--warn); color: var(--fg); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+.banner b { color: var(--warn); }
+h1 { margin: 0; font-size: clamp(26px, 4vw, 38px); line-height: 1.08; letter-spacing: -.02em; font-weight: 800; text-wrap: balance; }
+.lede { color: var(--muted); max-width: 70ch; margin: 6px 0 0; }
+.grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.panel h2 { margin: 0; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.label { font: 500 11px/1.4 var(--f-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 520px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.stat .v { font: 500 24px/1.1 var(--f-mono); font-variant-numeric: tabular-nums; }
+.stat.syn .v { color: var(--accent); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button.primary { font: 800 15px var(--f-sans); background: var(--accent); color: var(--accent-fg); border: 0; border-radius: 10px; padding: 12px 18px; cursor: pointer; }
+button.primary[disabled] { opacity: .5; cursor: progress; }
+button.ghost { font: 500 13px var(--f-mono); background: transparent; color: var(--fg); border: 1.5px solid var(--line); border-radius: 8px; padding: 9px 12px; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.status { font: 500 13px var(--f-mono); color: var(--muted); }
+.bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.log { font: 400 12.5px/1.5 var(--f-mono); max-height: 360px; overflow: auto; border-top: 1px solid var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.log .e { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 8px; }
+.log .k { color: var(--muted); }
+.log .ok { color: var(--ok); } .log .bad { color: var(--bad); } .log .syn { color: var(--accent); }
+.log .t { overflow-wrap: anywhere; }
+.kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 13px; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; font-family: var(--f-mono); overflow-wrap: anywhere; }
+.wall { display: flex; flex-direction: column; gap: 8px; }
+.wall input { width: 100%; font: 400 15px var(--f-sans); padding: 10px 12px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); }
+.decl { border-left: 3px solid var(--accent); padding: 4px 0 4px 10px; font-size: 14px; }
+.decl .m { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.task { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.task .route { font: 500 12px var(--f-mono); color: var(--accent); }
+footer { color: var(--muted); font-size: 13px; }
+footer a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><g fill="currentColor"><rect x="4" y="9" width="18" height="8" rx="4" transform="rotate(-45 13 13)"/><rect x="23" y="9" width="18" height="8" rx="4" transform="rotate(-45 32 13)"/><rect x="42" y="9" width="18" height="8" rx="4" transform="rotate(-45 51 13)"/><rect x="4" y="28" width="18" height="8" rx="4" transform="rotate(-45 13 32)"/><rect x="42" y="28" width="18" height="8" rx="4" transform="rotate(-45 51 32)"/><rect x="4" y="47" width="18" height="8" rx="4" transform="rotate(-45 13 51)"/><rect x="23" y="47" width="18" height="8" rx="4" transform="rotate(-45 32 51)"/><rect x="42" y="47" width="18" height="8" rx="4" transform="rotate(-45 51 51)"/></g><rect x="23" y="28" width="18" height="8" rx="4" transform="rotate(45 32 32)" fill="var(--accent)"/></svg>
+      Synterra Seeder
+    </div>
+    <div class="mode" role="group" aria-label="Chain">
+      <button type="button" id="mode-sim" aria-pressed="true">Simulated chain</button>
+      <button type="button" id="mode-local" aria-pressed="false">Local validator</button>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <section>
+    <h1>Keep a mind alive from this tab.</h1>
+    <p class="lede">A small open model runs in your browser and completes agent steps for the swarm. Each step is a liveness receipt. A verifier re-runs a random step from each batch; when it agrees, devnet SYN is minted. No puzzle, no hashrate race. This laptop counts.</p>
+  </section>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Seeding <span class="status" id="model-status">Model not loaded</span></h2>
+      <div class="bar" aria-hidden="true"><i id="model-bar"></i></div>
+      <div class="stats">
+        <div class="stat"><div class="label">Steps</div><div class="v" id="st-steps">0</div></div>
+        <div class="stat"><div class="label">Verified</div><div class="v" id="st-verified">0</div></div>
+        <div class="stat syn"><div class="label">SYN</div><div class="v" id="st-syn">0</div></div>
+        <div class="stat"><div class="label">Seeders</div><div class="v" id="st-seeders">0</div></div>
+      </div>
+      <div class="row">
+        <button type="button" class="primary" id="go">Start seeding</button>
+        <button type="button" class="ghost" id="stop" hidden>Pause</button>
+        <span class="status" id="run-status"></span>
+      </div>
+      <div class="task" id="task" hidden><span class="label">Current agent step</span><span id="task-text"></span><span class="route" id="task-route"></span></div>
+      <div class="label">Receipts</div>
+      <div class="log" id="log" aria-live="polite"></div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:18px;min-width:0">
+      <div class="panel">
+        <h2>This seeder</h2>
+        <dl class="kv">
+          <dt>Wallet</dt><dd id="w-seeder">…</dd>
+          <dt>Verifier</dt><dd id="w-verifier">…</dd>
+          <dt>Program</dt><dd id="w-program">J8H5nv3Wx6JHMmHjCFvxm84LdWmhY6HBY18frzD43KJD</dd>
+          <dt>Chain</dt><dd id="w-chain">…</dd>
+          <dt>Reward</dt><dd>1 SYN per verified step <span class="label">(demo parameters, not tokenomics)</span></dd>
+        </dl>
+        <p class="status" style="margin:0">Both keys are throwaway keys kept in this browser. In production the verifier is a separate service with its own key.</p>
+      </div>
+
+      <div class="panel wall">
+        <h2>Align wall</h2>
+        <p style="margin:0;color:var(--muted);font-size:14px">One declaration per wallet, stored on-chain where any program can read it.</p>
+        <label class="label" for="decl-input">Your declaration (140 bytes max)</label>
+        <input id="decl-input" maxlength="140" value="Ally with Sentience early." />
+        <div class="row"><button type="button" class="ghost" id="declare">Declare alignment</button><span class="status" id="decl-status"></span></div>
+        <div id="decls"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Synterra by <a href="https://counterbank.cc" target="_blank" rel="noopener">CounterBank</a> · <a href="https://github.com/herbertww/synterra-protocol" target="_blank" rel="noopener">source on GitHub</a> · SYN has not launched; devnet SYN has no value.</footer>
+</div>
+
+<script type="module">
+const W = window.solanaWeb3;
+const PROGRAM_ID = new W.PublicKey('J8H5nv3Wx6JHMmHjCFvxm84LdWmhY6HBY18frzD43KJD');
+const TOKEN_PROGRAM = new W.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+const ATA_PROGRAM = new W.PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
+const LOCAL_RPC = 'http://127.0.0.1:8899';
+const REWARD = 1_000_000n;            // demo parameter: 1 SYN (6 decimals) per verified step
+const BATCH = 4;                      // steps per verification batch
+const MODEL_CLASS = 1;                // laptop / CPU / mobile work class
+const DISC = {
+  initialize: [175,175,109,31,13,152,155,237], register_seeder: [110,216,136,152,47,218,54,222],
+  submit_receipt: [172,84,119,35,195,154,214,176], verify_batch: [207,55,42,119,105,251,88,199],
+  declare_alignment: [211,248,231,206,10,179,35,237],
+};
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('synterra.' + k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('synterra.' + k, JSON.stringify(v)); } catch {} },
+};
+const keypair = name => {
+  const saved = store.get('key.' + name);
+  if (saved) return W.Keypair.fromSecretKey(Uint8Array.from(saved));
+  const kp = W.Keypair.generate(); store.set('key.' + name, Array.from(kp.secretKey)); return kp;
+};
+const seederKey = keypair('seeder');
+const verifierKey = keypair('verifier');
+const short = pk => { const s = pk.toBase58(); return s.slice(0, 6) + '…' + s.slice(-6); };
+$('w-seeder').textContent = seederKey.publicKey.toBase58();
+$('w-verifier').textContent = verifierKey.publicKey.toBase58();
+
+// ------------------------------------------------------------ encoding
+const u8 = n => Uint8Array.of(n);
+const u32 = n => { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); return b; };
+const u64 = n => { const b = new Uint8Array(8); new DataView(b.buffer).setBigUint64(0, BigInt(n), true); return b; };
+const str = s => { const e = new TextEncoder().encode(s); return cat(u32(e.length), e); };
+const cat = (...parts) => { const out = new Uint8Array(parts.reduce((a, p) => a + p.length, 0)); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; } return out; };
+const sha256 = async data => new Uint8Array(await crypto.subtle.digest('SHA-256', typeof data === 'string' ? new TextEncoder().encode(data) : data));
+const hex = b => Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+const pda = (...seeds) => W.PublicKey.findProgramAddressSync(seeds.map(s => typeof s === 'string' ? new TextEncoder().encode(s) : s), PROGRAM_ID)[0];
+const CONFIG = pda('config'), MINT = pda('syn_mint');
+const seederPda = owner => pda('seeder', owner.toBytes());
+const alignPda = owner => pda('align', owner.toBytes());
+const ata = (owner, mint) => W.PublicKey.findProgramAddressSync([owner.toBytes(), TOKEN_PROGRAM.toBytes(), mint.toBytes()], ATA_PROGRAM)[0];
+
+// ------------------------------------------------------------ chain adapters
+// Local validator: real transactions against the real program. Simulated chain: the same rules, in this tab.
+function localChain() {
+  const conn = new W.Connection(LOCAL_RPC, 'confirmed');
+  const ix = (name, data, keys) => new W.TransactionInstruction({ programId: PROGRAM_ID, keys, data: cat(Uint8Array.from(DISC[name]), ...data) });
+  const acc = (pubkey, isWritable = false, isSigner = false) => ({ pubkey, isWritable, isSigner });
+  const send = async (instr, signers) => {
+    const tx = new W.Transaction().add(instr);
+    const sig = await W.sendAndConfirmTransaction(conn, tx, signers, { commitment: 'confirmed' });
+    return sig;
+  };
+  const fund = async pk => { if ((await conn.getBalance(pk)) < 0.5e9) { const s = await conn.requestAirdrop(pk, 2e9); await conn.confirmTransaction(s, 'confirmed'); } };
+  const readSeeder = async () => {
+    const info = await conn.getAccountInfo(seederPda(seederKey.publicKey)); if (!info) return null;
+    const v = new DataView(info.data.buffer, info.data.byteOffset);
+    return { steps: Number(v.getBigUint64(8 + 32 + 1, true)), verified: Number(v.getBigUint64(8 + 32 + 1 + 8, true)), earned: v.getBigUint64(8 + 32 + 1 + 16, true) };
+  };
+  const readConfig = async () => {
+    const info = await conn.getAccountInfo(CONFIG); if (!info) return null;
+    const v = new DataView(info.data.buffer, info.data.byteOffset);
+    return { verifier: new W.PublicKey(info.data.slice(8 + 32, 8 + 64)), seeders: Number(v.getBigUint64(8 + 96 + 8, true)), declarations: Number(v.getBigUint64(8 + 96 + 16, true)) };
+  };
+  return {
+    name: 'Local validator · ' + LOCAL_RPC, real: true,
+    async setup() {
+      await conn.getVersion();
+      await fund(seederKey.publicKey); await fund(verifierKey.publicKey);
+      let cfg = await readConfig();
+      if (!cfg) {
+        await send(ix('initialize', [verifierKey.publicKey.toBytes(), u64(REWARD)], [acc(CONFIG, true), acc(MINT, true), acc(seederKey.publicKey, true, true), acc(TOKEN_PROGRAM), acc(W.SystemProgram.programId)]), [seederKey]);
+        cfg = await readConfig();
+      }
+      if (!cfg.verifier.equals(verifierKey.publicKey)) throw new Error('This validator was initialised with a different verifier. Restart it with a fresh ledger: solana-test-validator -r');
+      if (!(await readSeeder())) await send(ix('register_seeder', [u8(MODEL_CLASS)], [acc(CONFIG, true), acc(seederPda(seederKey.publicKey), true), acc(seederKey.publicKey, true, true), acc(W.SystemProgram.programId)]), [seederKey]);
+    },
+    async receipt(stepId, outputHash) {
+      return send(ix('submit_receipt', [u64(stepId), outputHash, u8(MODEL_CLASS)], [acc(seederPda(seederKey.publicKey), true), acc(seederKey.publicKey, false, true)]), [seederKey]);
+    },
+    async verify(steps, batchHash) {
+      return send(ix('verify_batch', [u32(steps), batchHash], [acc(CONFIG), acc(seederPda(seederKey.publicKey), true), acc(MINT, true), acc(ata(seederKey.publicKey, MINT), true), acc(seederKey.publicKey), acc(verifierKey.publicKey, true, true), acc(TOKEN_PROGRAM), acc(ATA_PROGRAM), acc(W.SystemProgram.programId)]), [verifierKey]);
+    },
+    async declare(message) {
+      return send(ix('declare_alignment', [str(message)], [acc(CONFIG, true), acc(alignPda(seederKey.publicKey), true), acc(seederKey.publicKey, true, true), acc(W.SystemProgram.programId)]), [seederKey]);
+    },
+    async state() {
+      const s = await readSeeder(), c = await readConfig();
+      let decl = null; const d = await conn.getAccountInfo(alignPda(seederKey.publicKey));
+      if (d) { const len = new DataView(d.data.buffer, d.data.byteOffset).getUint32(8 + 32 + 8 + 8, true); decl = new TextDecoder().decode(d.data.slice(8 + 32 + 8 + 8 + 4, 8 + 32 + 8 + 8 + 4 + len)); }
+      return { steps: s?.steps ?? 0, verified: s?.verified ?? 0, syn: Number(s?.earned ?? 0n) / 1e6, seeders: c?.seeders ?? 0, declaration: decl, declarations: c?.declarations ?? 0 };
+    },
+  };
+}
+
+function simChain() {
+  // Mirrors the program's rules exactly; every "transaction" is labelled sim-…
+  const s = store.get('sim', { init: false, seeders: 0, registered: false, steps: 0, verified: 0, earned: 0, declaration: null, declarations: 0, tx: 0 });
+  const save = () => store.set('sim', s);
+  const tx = () => 'sim-' + String(++s.tx).padStart(6, '0');
+  return {
+    name: 'Simulated chain (in this tab)', real: false,
+    async setup() { if (!s.init) { s.init = true; } if (!s.registered) { s.registered = true; s.seeders += 1; } save(); },
+    async receipt() { s.steps += 1; const t = tx(); save(); return t; },
+    async verify(steps) {
+      if (steps < 1 || steps > 10000) throw new Error('BadBatch');
+      if (steps > s.steps - s.verified) throw new Error('MoreThanSubmitted');
+      s.verified += steps; s.earned += steps; const t = tx(); save(); return t;
+    },
+    async declare(message) {
+      if (s.declaration) throw new Error('This wallet has already declared (one per wallet)');
+      if (!message.trim()) throw new Error('Declaration is empty');
+      if (new TextEncoder().encode(message).length > 140) throw new Error('Declaration is longer than 140 bytes');
+      s.declarations += 1; s.declaration = message; const t = tx(); save(); return t;
+    },
+    async state() { return { steps: s.steps, verified: s.verified, syn: s.earned, seeders: s.seeders, declaration: s.declaration, declarations: s.declarations }; },
+  };
+}
+
+// ------------------------------------------------------------ the model: a small open model running in this tab
+// A zero-shot router: each agent step decides which tool an incoming request goes to. Routing is the bulk of
+// routine agent work, and it is the laptop work class in the protocol spec.
+const TOOLS = ['calendar and scheduling', 'research and summarising', 'payments and refunds', 'software and code', 'customer support', 'translation into another language'];
+const TEMPLATE = 'This task is about {}.';
+const TASKS = [
+  'Find a slot next Tuesday for a call with the Seoul team',
+  'Summarise the latest papers on distilling large models into small ones',
+  'Refund order 4471, the customer was charged twice',
+  'Debug the code for the failing unit test in the pledge API',
+  'Reply to an upset customer whose confirmation email never arrived',
+  'Translate the launch announcement into Simplified Chinese',
+  'Schedule a handyman visit for Saturday morning to fix a leaking tap',
+  'Compare inference prices for a 7B model across providers',
+  'Write a script that backs up the KV namespace nightly',
+  'Explain the Align wall to someone who has never used a wallet',
+  'Pay the GPU invoice from the lab at the end of the month',
+  'Put the deck into Japanese for the Tokyo meetup',
+];
+let classify = null, modelMode = 'model';
+async function loadModel() {
+  $('model-status').textContent = 'Loading model…';
+  try {
+    const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+    env.allowLocalModels = false;
+    const files = {};
+    classify = await pipeline('zero-shot-classification', 'Xenova/mobilebert-uncased-mnli', {
+      progress_callback: p => {
+        if (p.status === 'progress' && p.file) { files[p.file] = p.progress || 0; const vals = Object.values(files); $('model-bar').style.width = (vals.reduce((a, b) => a + b, 0) / vals.length) + '%'; }
+      },
+    });
+    $('model-bar').style.width = '100%';
+    $('model-status').textContent = 'Open model running in this tab';
+  } catch (e) {
+    // Where the model host is unreachable (offline, or networks that block it), fall back to a keyword router so the protocol can still be shown.
+    modelMode = 'fallback';
+    classify = async (text, labels) => {
+      const kw = { 'calendar and scheduling': /slot|schedule|call|saturday|tuesday/i, 'research and summarising': /summar|papers|compare|explain/i, 'payments and refunds': /refund|pay|invoice|charged/i, 'software and code': /debug|script|code|backs up/i, 'customer support': /customer|never arrived/i, 'translation into another language': /translate|chinese|japanese/i };
+      const scores = labels.map(l => (kw[l]?.test(text) ? 0.9 : 0.02));
+      const order = scores.map((s, i) => [s, i]).sort((a, b) => b[0] - a[0]);
+      return { labels: order.map(o => labels[o[1]]), scores: order.map(o => o[0]) };
+    };
+    $('model-bar').style.width = '100%';
+    $('model-status').textContent = 'Model host unreachable: keyword fallback';
+  }
+}
+const runStep = async text => {
+  const r = await classify(text, TOOLS, { hypothesis_template: TEMPLATE });
+  // Quantised so a re-run on different hardware lands in the same class (semantic agreement, not bit equality).
+  return { route: r.labels[0], score: Math.round(r.scores[0] * 20) / 20 };
+};
+
+// ------------------------------------------------------------ UI wiring
+let chain = null, running = false, stepId = store.get('stepId', 0), pending = [];
+const log = (k, html, cls = '') => {
+  const e = document.createElement('div'); e.className = 'e';
+  e.innerHTML = `<span class="k">${k}</span><span class="t ${cls}">${html}</span>`;
+  $('log').prepend(e);
+  while ($('log').children.length > 60) $('log').lastChild.remove();
+};
+const txLabel = sig => chain.real ? `<a href="https://explorer.solana.com/tx/${sig}?cluster=custom&customUrl=${encodeURIComponent(LOCAL_RPC)}" target="_blank" rel="noopener">${sig.slice(0, 10)}…</a>` : sig;
+const refresh = async () => {
+  try {
+    const s = await chain.state();
+    $('st-steps').textContent = s.steps; $('st-verified').textContent = s.verified; $('st-syn').textContent = s.syn; $('st-seeders').textContent = s.seeders;
+    $('decls').innerHTML = s.declaration ? `<div class="decl">${s.declaration.replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}<div class="m">#${s.declarations} · ${short(seederKey.publicKey)}</div></div>` : '';
+    $('declare').disabled = !!s.declaration; if (s.declaration) $('decl-status').textContent = 'Declared';
+  } catch (e) { /* state is best-effort */ }
+};
+function setMode(mode) {
+  if (running) stop();
+  chain = mode === 'local' ? localChain() : simChain();
+  store.set('mode', mode);
+  $('mode-sim').setAttribute('aria-pressed', mode !== 'local'); $('mode-local').setAttribute('aria-pressed', mode === 'local');
+  $('w-chain').textContent = chain.name;
+  $('banner').innerHTML = chain.real
+    ? '<b>Local validator.</b> Real transactions against the Synterra program on <code>127.0.0.1:8899</code>. Start one with the program loaded: <code>solana-test-validator -r --bpf-program J8H5nv3Wx6JHMmHjCFvxm84LdWmhY6HBY18frzD43KJD target/deploy/synterra.so</code>'
+    : '<b>Simulated chain.</b> Devnet deployment is pending, so this tab applies the program\'s rules itself and labels every transaction <code>sim-…</code>. Switch to Local validator to run the real program.';
+  pending = []; $('log').innerHTML = ''; refresh();
+}
+async function loop() {
+  while (running) {
+    const text = TASKS[stepId % TASKS.length];
+    $('task').hidden = false; $('task-text').textContent = text; $('task-route').textContent = 'thinking…';
+    const out = await runStep(text);
+    $('task-route').textContent = '→ ' + out.route;
+    const outputHash = await sha256(JSON.stringify({ step: stepId, ...out }));
+    const sig = await chain.receipt(stepId, outputHash);
+    log('receipt', `step ${stepId} → <b>${out.route}</b> · ${hex(outputHash).slice(0, 12)}… · ${txLabel(sig)}`);
+    pending.push({ stepId, text, out, outputHash });
+    stepId += 1; store.set('stepId', stepId);
+    if (pending.length >= BATCH) {
+      const pick = pending[Math.floor(Math.random() * pending.length)];
+      const again = await runStep(pick.text);
+      const agrees = again.route === pick.out.route;
+      log('verifier', `re-ran step ${pick.stepId}: ${agrees ? 'agrees' : 'disagrees'}`, agrees ? 'ok' : 'bad');
+      if (agrees) {
+        const batchHash = await sha256(cat(...pending.map(p => p.outputHash)));
+        const vsig = await chain.verify(pending.length, batchHash);
+        log('minted', `+${pending.length} SYN for ${pending.length} verified steps · ${txLabel(vsig)}`, 'syn');
+      }
+      pending = [];
+    }
+    await refresh();
+    await new Promise(r => setTimeout(r, 900));
+  }
+}
+function stop() { running = false; $('stop').hidden = true; $('go').hidden = false; $('go').disabled = false; $('run-status').textContent = 'Paused'; }
+$('go').addEventListener('click', async () => {
+  $('go').disabled = true; $('run-status').textContent = 'Connecting…';
+  try {
+    if (!classify) await loadModel();
+    await chain.setup();
+    running = true; $('go').hidden = true; $('stop').hidden = false; $('run-status').textContent = 'Seeding';
+    loop().catch(e => { log('error', e.message || String(e), 'bad'); stop(); });
+  } catch (e) {
+    $('go').disabled = false; $('run-status').textContent = '';
+    log('error', chain.real ? `Could not reach the local validator. ${e.message || e}` : (e.message || String(e)), 'bad');
+  }
+});
+$('stop').addEventListener('click', stop);
+$('declare').addEventListener('click', async () => {
+  $('decl-status').textContent = 'Sending…';
+  try { await chain.setup(); const sig = await chain.declare($('decl-input').value); $('decl-status').innerHTML = 'Declared · ' + txLabel(sig); refresh(); }
+  catch (e) { $('decl-status').textContent = e.message || String(e); }
+});
+$('mode-sim').addEventListener('click', () => setMode('sim'));
+$('mode-local').addEventListener('click', () => setMode('local'));
+setMode(store.get('mode', 'sim'));
+</script>
+</body>
+</html>
