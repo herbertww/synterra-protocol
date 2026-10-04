@@ -1,0 +1,24 @@
+# Build output
+target/
+.anchor/
+test-ledger/
+node_modules/
+dist/
+
+# Secrets: never commit keys, wallets or environment files
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id.json
+**/keypairs/
+**/*-keypair.json
+programs/*/target/deploy/*.json
+.secrets/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
