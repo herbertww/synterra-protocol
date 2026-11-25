@@ -1,5 +1,5 @@
 {
-  "about": "Synterra node wire-format test vectors. The ed25519 secret key is the RFC 8032 seed of 32 bytes of 0x07. Hex is lowercase.",
+  "about": "Synterra Core wire-format test vectors. The ed25519 secret key is the RFC 8032 seed of 32 bytes of 0x07. Hex is lowercase.",
   "protocol": 1,
   "public_key": "ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
   "secret_key_seed": "0707070707070707070707070707070707070707070707070707070707070707",

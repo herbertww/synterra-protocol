@@ -1,4 +1,4 @@
-//! `synterra`: the reference node for Synterra proof mining.
+//! Synterra Core (`synterra`): the reference node for Synterra proof mining.
 //!
 //! Like a Bitcoin full node, it keeps a copy of everything, relays it to
 //! peers and verifies it itself. What it verifies is not hashes but proofs:
@@ -28,7 +28,7 @@ use crate::node::Node;
 #[command(
     name = "synterra",
     version,
-    about = "Synterra proof-mining node: keep, relay and kernel-check proofs"
+    about = "Synterra Core: the reference proof-mining node. Keep, relay and kernel-check proofs."
 )]
 struct Cli {
     /// Data directory. Defaults to $SYNTERRA_DATADIR or ~/.synterra.

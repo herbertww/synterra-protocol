@@ -281,7 +281,7 @@ pub enum Verdict {
 /// Everything that can change a verdict, recorded so any verifier can reproduce it.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct CheckParams {
-    /// e.g. "synterra-node/0.1.0".
+    /// e.g. "synterra-core/0.1.0".
     pub software: String,
     /// The judge command as configured, before path substitution.
     pub command: Vec<String>,

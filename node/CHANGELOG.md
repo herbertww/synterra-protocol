@@ -1,10 +1,16 @@
 # Changelog
 
-All notable changes to this node. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [Semantic Versioning](https://semver.org/) once a release is published.
+All notable changes to Synterra Core. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions follow [Semantic Versioning](https://semver.org/) once a release is published.
 
 ## [Unreleased]
 
+### Changed
+
+- Named **Synterra Core**. The binary stays `synterra`; the crate and the `software` string in attestations become `synterra-core`.
+
 ### Added
+
+- Identity: the hallmark ⊢ mark, README banners for light and dark themes, a brand guide and the CLI colour palette (`assets/`). Terminal colour is off when output is not a terminal, and honours `NO_COLOR`.
 
 - Protocol v1: signed, content-addressed targets, submissions and attestations; canonical JSON; Ed25519; a hash-chained local ledger; pull-only HTTP sync in ledger order.
 - Gates: `shape`, `no_sorry`, `kernel` (`lake comparator --paranoid`: Lean's kernel plus every bundled external kernel), `not_trivial` (claims must elaborate, and must not close with `omega`, `decide`, `simp` or `grind`), `not_duplicate`.

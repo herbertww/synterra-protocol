@@ -51,7 +51,7 @@ pub fn generate() -> Result<Value> {
     env.validate()?;
     Ok(json!({
         "protocol": PROTOCOL_VERSION,
-        "about": "Synterra node wire-format test vectors. The ed25519 secret key is the RFC 8032 seed of 32 bytes of 0x07. Hex is lowercase.",
+        "about": "Synterra Core wire-format test vectors. The ed25519 secret key is the RFC 8032 seed of 32 bytes of 0x07. Hex is lowercase.",
         "secret_key_seed": hex::encode(SEED),
         "public_key": id.public_hex(),
         "vectors": [{

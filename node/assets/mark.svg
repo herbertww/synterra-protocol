@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="t">
+  <title id="t">Synterra Core: the turnstile, struck in a hallmark</title>
+  <style>path{fill:#2347C6}@media (prefers-color-scheme:dark){path{fill:#7E9CFF}}</style>
+  <path fill-rule="evenodd" d="M12 4H52A8 8 0 0 0 60 12V52A8 8 0 0 0 52 60H12A8 8 0 0 0 4 52V12A8 8 0 0 0 12 4ZM20 16V48H28V36H48V28H28V16Z"/>
+</svg>

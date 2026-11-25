@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Synterra Core banner</title>
+<!-- Source for banner-dark.png and banner-light.png (1280x400, rendered at 2x).
+     Render: open with ?theme=dark or ?theme=light (and optionally &name=...), screenshot #banner. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ink: #0B0B0D; --paper: #F1EFEA; --cobalt: #2347C6; --cobalt-light: #7E9CFF;
+    --font-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  /* theme tokens */
+  .dark  { --bg: var(--ink);   --fg: var(--paper); --fg-2: #C9C7C1; --dim: #8E8C87; --mark: var(--cobalt-light); --engrave: var(--cobalt-light); --engrave-op: 0.42; --chip-bg: var(--cobalt); --chip-fg: var(--paper); }
+  .light { --bg: var(--paper); --fg: var(--ink);   --fg-2: #2E2E33; --dim: #5F5D59; --mark: var(--cobalt);       --engrave: var(--cobalt);       --engrave-op: 0.22; --chip-bg: var(--cobalt); --chip-fg: var(--paper); }
+  html, body { margin: 0; background: #777; }
+  #banner {
+    width: 1280px; height: 400px; position: relative; overflow: hidden;
+    background: var(--bg); color: var(--fg);
+    display: grid; grid-template-columns: 400px 1fr; align-items: center;
+  }
+  #field { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mark-cell { position: relative; display: grid; place-items: center; height: 100%; }
+  .mark-cell svg { width: 212px; height: 212px; display: block; }
+  .mark-cell svg path { fill: var(--mark); }
+  .assay { position: absolute; bottom: 34px; left: 0; right: 0; text-align: center; font: 400 15px/1 var(--font-mono); color: var(--dim); }
+  .copy { position: relative; padding-right: 72px; display: grid; gap: 20px; }
+  .wordmark { margin: 0; font: 800 112px/0.9 var(--font-display); letter-spacing: -0.055em; white-space: nowrap; }
+  .tagline { margin: 0; font: 500 33px/1.15 var(--font-display); letter-spacing: -0.02em; color: var(--fg-2); }
+  .term { margin-top: 14px; display: flex; align-items: center; gap: 16px; font: 400 19px/1 var(--font-mono); color: var(--dim); }
+  .term b { font-weight: 500; color: var(--fg); }
+  .chip { font: 500 15px/1 var(--font-mono); letter-spacing: 0.12em; padding: 7px 10px 6px; background: var(--chip-bg); color: var(--chip-fg); border-radius: 2px; }
+</style>
+</head>
+<body>
+<div id="banner" class="dark">
+  <svg id="field" aria-hidden="true"></svg>
+  <div class="mark-cell">
+    <svg viewBox="0 0 64 64" role="img" aria-label="Synterra Core mark">
+      <path fill-rule="evenodd" d="M12 4H52A8 8 0 0 0 60 12V52A8 8 0 0 0 52 60H12A8 8 0 0 0 4 52V12A8 8 0 0 0 12 4ZM20 16V48H28V36H48V28H28V16Z"/>
+    </svg>
+    <div class="assay">lake comparator --paranoid</div>
+  </div>
+  <div class="copy">
+    <h1 class="wordmark" id="name">Synterra Core</h1>
+    <p class="tagline">Mined by anyone. Assayed by the kernel.</p>
+    <div class="term"><span>$ <b>synterra check</b> 7c1b9e3f…</span><span class="chip">ACCEPTED</span></div>
+  </div>
+</div>
+<script>
+  const q = new URLSearchParams(location.search);
+  const banner = document.getElementById('banner');
+  banner.className = q.get('theme') === 'light' ? 'light' : 'dark';
+  if (q.get('name')) document.getElementById('name').textContent = q.get('name');
+
+  // Engraved wave field, like the underprint of a banknote: two families of fine
+  // sine lines that cross into a moire lattice, densest behind the mark, faded
+  // out before the type.
+  const NS = 'http://www.w3.org/2000/svg';
+  const field = document.getElementById('field');
+  field.setAttribute('viewBox', '0 0 1280 400');
+  const defs = document.createElementNS(NS, 'defs');
+  defs.innerHTML = `
+    <radialGradient id="fade" cx="200" cy="200" r="620" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+      <stop offset="0.42" stop-color="#fff" stop-opacity="0.55"/>
+      <stop offset="0.75" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <mask id="m"><rect width="1280" height="400" fill="url(#fade)"/></mask>`;
+  field.appendChild(defs);
+  const g = document.createElementNS(NS, 'g');
+  g.setAttribute('mask', 'url(#m)');
+  const style = getComputedStyle(banner);
+  g.setAttribute('stroke', style.getPropertyValue('--engrave').trim());
+  g.setAttribute('stroke-opacity', style.getPropertyValue('--engrave-op').trim());
+  g.setAttribute('fill', 'none');
+  g.setAttribute('stroke-width', '0.7');
+  field.appendChild(g);
+  function family(n, spacing, a1, l1, a2, l2, drift, dir) {
+    for (let j = 0; j < n; j++) {
+      const y0 = j * spacing - 60;
+      let d = '';
+      for (let x = -10; x <= 1290; x += 4) {
+        const y = y0 + dir * (a1 * Math.sin(x / l1 + j * drift) + a2 * Math.sin(x / l2 - j * drift * 0.6));
+        d += (x === -10 ? 'M' : 'L') + x + ' ' + y.toFixed(2);
+      }
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', d);
+      g.appendChild(p);
+    }
+  }
+  family(66, 8, 16, 88, 7, 33, 0.16, 1);
+  family(66, 8, 16, 88, 7, 33, 0.16, -1);
+  document.fonts.ready.then(() => { document.body.dataset.ready = '1'; });
+</script>
+</body>
+</html>

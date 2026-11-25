@@ -1,6 +1,6 @@
-# Synterra node protocol, version 1
+# Synterra proof-mining protocol, version 1
 
-Status: **draft**. Nothing has shipped. This document is normative for the reference node in this directory: where the code and this text disagree, that is a bug in one of them, and you should report it.
+Status: **draft**. Nothing has shipped. This document is normative for Synterra Core, the reference node in this directory: where the code and this text disagree, that is a bug in one of them, and you should report it.
 
 The aim is that anyone can write an independent implementation, judge the same submissions and reach the same verdicts, without reading our code. `docs/test-vectors.json` lets you check your encoding byte for byte, and `scripts/check-vectors.py` is an independent check written in Python.
 

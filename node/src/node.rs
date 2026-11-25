@@ -304,7 +304,7 @@ async fn info(State(n): State<Shared>) -> Json<serde_json::Value> {
     let height = n.store.ledger().map(|l| l.len()).unwrap_or(0);
     Json(json!({
         "protocol": PROTOCOL_VERSION,
-        "software": concat!("synterra-node/", env!("CARGO_PKG_VERSION")),
+        "software": concat!("synterra-core/", env!("CARGO_PKG_VERSION")),
         "node": n.id.public_hex(),
         "roles": n.roles(),
         "height": height,

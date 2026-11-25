@@ -313,7 +313,7 @@ pub fn run(
         .to_string();
     let tc_dir = toolchain_dir(&toolchain);
     let params = CheckParams {
-        software: concat!("synterra-node/", env!("CARGO_PKG_VERSION")).to_string(),
+        software: concat!("synterra-core/", env!("CARGO_PKG_VERSION")).to_string(),
         command: cfg.command.clone(),
         toolchain: toolchain.clone(),
         trivial_tactics: cfg.trivial_tactics.clone(),

@@ -1,9 +1,9 @@
 [package]
-name = "synterra-node"
+name = "synterra-core"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
-description = "Reference node for Synterra proof mining: keeps, relays and kernel-checks proof contributions."
+description = "Synterra Core: the reference node for Synterra proof mining. Keeps, relays and kernel-checks proof contributions."
 repository = "https://github.com/herbertww/synterra-protocol"
 
 # Standalone: not a member of the Anchor workspace one directory up.

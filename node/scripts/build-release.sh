@@ -7,6 +7,6 @@ SRC=$(pwd)
 CARGO_HOME=${CARGO_HOME:-$HOME/.cargo}
 export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-$SRC/target}
 # Strip machine-specific paths from the binary (panic messages, file names).
-export RUSTFLAGS="--remap-path-prefix=$SRC=/synterra-node --remap-path-prefix=$CARGO_HOME=/cargo"
+export RUSTFLAGS="--remap-path-prefix=$SRC=/synterra-core --remap-path-prefix=$CARGO_HOME=/cargo"
 cargo build --release --locked
 sha256sum "$CARGO_TARGET_DIR/release/synterra"

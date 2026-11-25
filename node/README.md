@@ -1,6 +1,14 @@
-# Synterra node
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/herbertww/synterra-protocol/main/node/assets/banner-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/herbertww/synterra-protocol/main/node/assets/banner-light.png">
+  <img alt="Synterra Core: mined by anyone, assayed by the kernel" src="assets/banner-light.png" width="100%">
+</picture>
 
-The reference node for **Synterra proof mining**. Like a Bitcoin full node, it keeps a copy of everything, relays it to peers and verifies it itself. What it verifies is not a hash puzzle. It verifies proofs, using Lean's own judge.
+# Synterra Core
+
+The reference node for **Synterra proof mining**. The binary is `synterra`. In the line of Bitcoin Core, it keeps a copy of everything, relays it to peers and verifies it itself. What it verifies is not a hash puzzle but a proof, using Lean's own judge.
+
+Mining ends at the assay office. Anyone can mine. Synterra Core assays each contribution with `lake comparator --paranoid`, and a contribution that passes gets a signed attestation: its hallmark.
 
 > **Status: in build. Nothing has shipped.** This software issues no SYN. Scores are labelled *demo*: no issuance split, weight, band or payout schedule is decided, and nothing here is one.
 
@@ -101,6 +109,7 @@ CI runs all three on every change, plus `cargo audit` against the RustSec adviso
 ## Documentation
 
 - [docs/PROTOCOL.md](docs/PROTOCOL.md): objects, encoding, signing, gates, network
+- [assets/brand.md](assets/brand.md) and [assets/terminal.md](assets/terminal.md): the name, the hallmark mark, colour, type and the CLI palette
 - [docs/VERIFYING.md](docs/VERIFYING.md): every way to check our work
 - [docs/THREAT-MODEL.md](docs/THREAT-MODEL.md): what we defend, against whom, and the open gaps
 - [SECURITY.md](SECURITY.md), [CONTRIBUTING.md](CONTRIBUTING.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md), [CHANGELOG.md](CHANGELOG.md)
