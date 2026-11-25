@@ -1,0 +1,9 @@
+Synterra node
+Copyright 2026 CounterBank
+
+This product includes software developed by CounterBank (https://counterbank.cc).
+It is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Proofs are judged by Lean's own tools (lake comparator and the external kernels
+bundled with Lean), which are not part of this product and are distributed by
+the Lean FRO under their own licence.

@@ -1,0 +1,80 @@
+name: node
+
+on:
+  push:
+    paths: ["node/**", ".github/workflows/node.yml"]
+  pull_request:
+    paths: ["node/**", ".github/workflows/node.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: node-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      # Third-party code is pinned to full commit hashes, not movable tags.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Format
+        run: cargo fmt --check
+
+      - name: Unit tests
+        run: cargo test --locked --release
+
+      - name: Build
+        run: cargo build --locked --release
+
+      - name: Test vectors, checked independently in Python
+        run: |
+          ./target/release/synterra vectors | diff - docs/test-vectors.json
+          python3 -m venv /tmp/v && /tmp/v/bin/pip install --quiet cryptography
+          /tmp/v/bin/python scripts/check-vectors.py docs/test-vectors.json
+
+      - name: Two-node network test (stand-ins for Lean)
+        run: BIN=target/release/synterra bash scripts/e2e-mock.sh
+
+      - name: Install bubblewrap and Lean
+        env:
+          # elan v4.4.0, pinned to its commit; the installer is read from that commit only.
+          ELAN_COMMIT: 3cc76985a1becb3c03cd65c1c5007e6f186ae474
+          ELAN_INIT_SHA256: a620ff1641616222c8d37c54845492004bb84d6877cdbc944dd65c1aa685bf53
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q bubblewrap
+          # Ubuntu 24.04 restricts unprivileged user namespaces, which bubblewrap needs.
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          curl -sSfL "https://raw.githubusercontent.com/leanprover/elan/$ELAN_COMMIT/elan-init.sh" -o /tmp/elan-init.sh
+          echo "$ELAN_INIT_SHA256  /tmp/elan-init.sh" | sha256sum -c -
+          sh /tmp/elan-init.sh -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Install the example's pinned toolchain
+        run: elan toolchain install "$(cat examples/gauss/lean-toolchain)"
+
+      - name: Real-Lean adversarial test with an independent verifier
+        run: BIN=target/release/synterra bash scripts/e2e-lean.sh
+
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: node
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: RustSec advisories
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit

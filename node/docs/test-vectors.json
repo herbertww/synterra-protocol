@@ -1,0 +1,16 @@
+{
+  "about": "Synterra node wire-format test vectors. The ed25519 secret key is the RFC 8032 seed of 32 bytes of 0x07. Hex is lowercase.",
+  "protocol": 1,
+  "public_key": "ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c",
+  "secret_key_seed": "0707070707070707070707070707070707070707070707070707070707070707",
+  "vectors": [
+    {
+      "canonical_body": "{\"baseline_loc\":null,\"challenge_module\":\"Challenge\",\"created\":0,\"name\":\"test vector\",\"permitted_axioms\":[\"propext\",\"Quot.sound\",\"Classical.choice\"],\"project\":{\"files\":[{\"content\":\"theorem t : True := sorry\\n\",\"path\":\"Challenge.lean\"},{\"content\":\"{}\\n\",\"path\":\"lake-manifest.json\"},{\"content\":\"name = \\\"vector\\\"\\n\",\"path\":\"lakefile.toml\"},{\"content\":\"leanprover/lean4:v4.36.0\\n\",\"path\":\"lean-toolchain\"}]},\"theorem_names\":[\"t\"],\"v\":1}",
+      "canonical_envelope": "{\"body\":{\"baseline_loc\":null,\"challenge_module\":\"Challenge\",\"created\":0,\"name\":\"test vector\",\"permitted_axioms\":[\"propext\",\"Quot.sound\",\"Classical.choice\"],\"project\":{\"files\":[{\"content\":\"theorem t : True := sorry\\n\",\"path\":\"Challenge.lean\"},{\"content\":\"{}\\n\",\"path\":\"lake-manifest.json\"},{\"content\":\"name = \\\"vector\\\"\\n\",\"path\":\"lakefile.toml\"},{\"content\":\"leanprover/lean4:v4.36.0\\n\",\"path\":\"lean-toolchain\"}]},\"theorem_names\":[\"t\"],\"v\":1},\"kind\":\"target\",\"sig\":\"32cc58e626348b859381e253c64298f4d406b5ed0f524fc183f05f445ef507d2311bae8df5e86eb07ccea9889493be9034606e171c44f25a09da45bf8bb5c30f\",\"signer\":\"ea4a6c63e29c520abef5507b132ec5f9954776aebebe7b92421eea691446d22c\"}",
+      "id": "91595f47c15b6cb28610fd906d1307f3bdff2840f4bca21d4938a64f7ca4be02",
+      "kind": "target",
+      "signature": "32cc58e626348b859381e253c64298f4d406b5ed0f524fc183f05f445ef507d2311bae8df5e86eb07ccea9889493be9034606e171c44f25a09da45bf8bb5c30f",
+      "signing_bytes": "synterra/v1/target/{\"baseline_loc\":null,\"challenge_module\":\"Challenge\",\"created\":0,\"name\":\"test vector\",\"permitted_axioms\":[\"propext\",\"Quot.sound\",\"Classical.choice\"],\"project\":{\"files\":[{\"content\":\"theorem t : True := sorry\\n\",\"path\":\"Challenge.lean\"},{\"content\":\"{}\\n\",\"path\":\"lake-manifest.json\"},{\"content\":\"name = \\\"vector\\\"\\n\",\"path\":\"lakefile.toml\"},{\"content\":\"leanprover/lean4:v4.36.0\\n\",\"path\":\"lean-toolchain\"}]},\"theorem_names\":[\"t\"],\"v\":1}"
+    }
+  ]
+}

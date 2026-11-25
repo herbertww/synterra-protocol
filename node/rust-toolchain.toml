@@ -1,0 +1,5 @@
+# Pinned so that builds are reproducible: the same commit, the same toolchain, the same binary.
+[toolchain]
+channel = "1.99.0"
+profile = "minimal"
+components = ["rustfmt"]

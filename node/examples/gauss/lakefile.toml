@@ -1,0 +1,11 @@
+name = "gauss"
+defaultTargets = ["Challenge"]
+
+[[lean_lib]]
+name = "Defs"
+
+[[lean_lib]]
+name = "Challenge"
+
+[[lean_lib]]
+name = "Solution"
